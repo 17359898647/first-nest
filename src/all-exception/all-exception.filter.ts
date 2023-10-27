@@ -9,9 +9,10 @@ export class AllExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>()
     const request = ctx.getRequest<Request>()
     const status = exception.getStatus() || 500
-    const { message, code } = exception.getResponse() as any
+    const message = exception.getResponse() as any
+    console.log(exception.getResponse())
     response.status(status).json({
-      code: code || status,
+      code: status,
       path: request.url,
       timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       error: 'Bad Request',
