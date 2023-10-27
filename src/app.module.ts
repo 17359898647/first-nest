@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { ConfigModule } from '@nestjs/config'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { UserModule } from './user/user.module'
 import { PermissionEntity, RoleEntity, UserEntity } from './user/entities'
 import { RedisModule } from './redis/redis.module'
-import { EmailModule } from './email/email.module';
+import { EmailModule } from './email/email.module'
 
 @Module({
   // 声明控制器
@@ -33,6 +34,10 @@ import { EmailModule } from './email/email.module';
         /* 额外配置 */
         authPlygin: 'sha256_password', // 认证插件
       },
+    }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
     }),
     UserModule,
     RedisModule,
