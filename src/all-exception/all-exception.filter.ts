@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common'
-import * as monent from 'monent'
+import { Request, Response } from 'express'
+import * as dayjs from 'dayjs'
 
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {
@@ -11,8 +12,8 @@ export class AllExceptionFilter implements ExceptionFilter {
     const { message, code } = exception.getResponse() as any
     response.status(status).json({
       code: code || status,
-      timestamp: monent().format('YYYY-MM-DD HH:mm:ss'),
       path: request.url,
+      timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       error: 'Bad Request',
       message: message || '请求失败',
     })

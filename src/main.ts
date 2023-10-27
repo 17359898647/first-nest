@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config'
 import { AppModule } from './app.module'
 import { LogTimesInterceptor } from './log-times/log-times.interceptor'
 import { TransformDataInterceptor } from './transform-data/transform-data.interceptor'
+import { AllExceptionFilter } from './all-exception/all-exception.filter'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -13,6 +14,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService)
   const port = configService.get('nest_server_port')
   app.useGlobalInterceptors(new LogTimesInterceptor(), new TransformDataInterceptor())
+  app.useGlobalFilters(new AllExceptionFilter())
   await app.listen(port)
   console.log(`http://localhost:${port}`)
 }
