@@ -30,6 +30,8 @@
     "class-validator": "^0.14.0",
     "ge-eslint": "^0.0.5",
     "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "monent": "^0.0.2-security",
     "mysql2": "^3.6.2",
     "nodemailer": "^6.9.7",
     "redis": "^4.6.10",

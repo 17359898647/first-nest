@@ -15,7 +15,8 @@ export class UserController {
 
   @Post('register')
   async register(@Body() registerUser: RegisterUserDto) {
-    return await this.userService.register(registerUser)
+    // return await this.userService.register(registerUser)
+    return '注册成功'
   }
 
   @Get('register-captcha')
