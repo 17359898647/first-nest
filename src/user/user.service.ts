@@ -17,7 +17,6 @@ export class UserService {
 
   async register(registerUser: RegisterUserDto) {
     const captchaKey = `captcha_${registerUser.email}`
-    console.log(captchaKey)
     const captcha = await this.redisService.get(captchaKey)
     if (!captcha)
       throw new HttpException('验证码已过期', HttpStatus.BAD_REQUEST)

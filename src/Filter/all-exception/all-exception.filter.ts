@@ -10,7 +10,6 @@ export class AllExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>()
     const status = exception.getStatus() || 500
     const message = exception.getResponse() as any
-    console.log(exception.getResponse())
     response.status(status).json({
       code: status,
       path: request.url,
