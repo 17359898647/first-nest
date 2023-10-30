@@ -1,16 +1,25 @@
 import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { forEach, indexOf, map, reduce } from 'lodash'
 import { RedisService } from '../redis/redis.service'
 import { md5 } from '../utils/md5'
-import { UserEntity } from './entities'
+import { Permission, Roles, Users } from './entities'
 import { RegisterUserDto } from './dto/register-user.dto'
+import { LoginUserDto } from './dto/login-user.dto'
+import { LoginUserVo } from './vo/login-user.vo'
 
 @Injectable()
 export class UserService {
   private logger = new Logger()
-  @InjectRepository(UserEntity)
-  private userRepository: Repository<UserEntity>
+  @InjectRepository(Users)
+  private userRepository: Repository<Users>
+
+  @InjectRepository(Roles)
+  private roleRepository: Repository<Roles>
+
+  @InjectRepository(Permission)
+  private permissionRepository: Repository<Permission>
 
   @Inject(RedisService)
   private redisService: RedisService
@@ -27,7 +36,7 @@ export class UserService {
     })
     if (foundUser)
       throw new HttpException('用户名已存在', HttpStatus.BAD_REQUEST)
-    const newUser = new UserEntity()
+    const newUser = new Users()
     newUser.username = registerUser.username
     newUser.password = md5(registerUser.password)
     newUser.email = registerUser.email
@@ -39,6 +48,95 @@ export class UserService {
     catch (e) {
       this.logger.error(e, UserService)
       return '注册失败'
+    }
+  }
+
+  async initData() {
+    const user1 = new Users()
+    user1.username = 'zhangsan'
+    user1.password = md5('111111')
+    user1.email = 'xxx@xx.com'
+    user1.isAdmin = true
+    user1.nickName = '张三'
+    user1.phoneNumber = '13233323333'
+
+    const user2 = new Users()
+    user2.username = 'lisi'
+    user2.password = md5('222222')
+    user2.email = 'yy@yy.com'
+    user2.nickName = '李四'
+
+    const role1 = new Roles()
+    role1.name = '管理员'
+
+    const role2 = new Roles()
+    role2.name = '普通用户'
+
+    const permission1 = new Permission()
+    permission1.code = 'ccc'
+    permission1.description = '访问 ccc 接口'
+
+    const permission2 = new Permission()
+    permission2.code = 'ddd'
+    permission2.description = '访问 ddd 接口'
+
+    user1.roles = [role1]
+    user2.roles = [role2]
+
+    role1.permissions = [permission1, permission2]
+    role2.permissions = [permission1]
+
+    await this.permissionRepository.save([permission1, permission2])
+    await this.roleRepository.save([role1, role2])
+    await this.userRepository.save([user1, user2])
+  }
+
+  createPermissions(roles: Roles[]) {
+    return reduce(roles, (acc: Permission[], role) => {
+      forEach(role.permissions, (permission) => {
+        if (indexOf(acc, permission) === -1)
+          acc.push(permission)
+      })
+      return acc
+    }, [])
+  }
+
+  async login(loginUserDto: LoginUserDto, isAdmin: boolean = false) {
+    const user = await this.userRepository.findOne({
+      where: {
+        username: loginUserDto.username,
+        isAdmin,
+      },
+      relations: ['roles', 'roles.permissions'],
+    })
+    if (!user)
+      throw new HttpException('用户名不存在', HttpStatus.BAD_REQUEST)
+    if (user.password !== md5(loginUserDto.password))
+      throw new HttpException('密码错误', HttpStatus.BAD_REQUEST)
+    const userVo = new LoginUserVo()
+    userVo.userInfo = {
+      ...user,
+      userId: user.id,
+      createTime: user.createTime.getTime(),
+      roles: map(user.roles, role => role.name),
+      permissions: this.createPermissions(user.roles),
+    }
+    return userVo
+  }
+
+  async findUserById(userId: number, isAdmin: boolean = false) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+        isAdmin,
+      },
+      relations: ['roles', 'roles.permissions'],
+    })
+    return {
+      ...user,
+      createTime: user.createTime.getTime(),
+      roles: map(user.roles, role => role.name),
+      permissions: this.createPermissions(user.roles),
     }
   }
 }

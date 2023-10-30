@@ -3,8 +3,9 @@ import { RedisClientType } from 'redis'
 
 @Injectable()
 export class RedisService {
-  @Inject('REDIS_CLIENT')
-  private readonly redisClient: RedisClientType
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redisClient: RedisClientType,
+  ) {}
 
   async get(key: string): Promise<string | null> {
     const keys = await this.redisClient.keys('*')

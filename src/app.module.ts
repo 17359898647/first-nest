@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { JwtModule } from '@nestjs/jwt'
+import { APP_GUARD } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { UserModule } from './user/user.module'
-import { PermissionEntity, RoleEntity, UserEntity } from './user/entities'
+import { Permission, Roles, Users } from './user/entities'
 import { RedisModule } from './redis/redis.module'
 import { EmailModule } from './email/email.module'
+import { LoginGuard } from './Guard/login.guard'
+import { PermissionGuard } from './Guard/permission.guard'
 
 @Module({
   // 声明控制器
@@ -14,6 +18,7 @@ import { EmailModule } from './email/email.module'
   // 导入模块
   imports: [
     TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         /* 数据库连接配置 */
         type: 'mysql', // 数据库类型
@@ -25,9 +30,9 @@ import { EmailModule } from './email/email.module'
         synchronize: true, // 是否自动同步数据库结构
         logging: true, // 是否打印日志
         entities: [ // 实体类
-          RoleEntity,
-          PermissionEntity,
-          UserEntity,
+          Roles,
+          Permission,
+          Users,
         ],
         poolSize: 10, // 连接池大小
         connectorPackage: 'mysql2', // 数据库连接器包名
@@ -36,17 +41,36 @@ import { EmailModule } from './email/email.module'
           authPlygin: 'sha256_password', // 认证插件
         },
       }),
-      inject: [ConfigService],
     }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      global: true,
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('jwt_secret'),
+        signOptions: {
+          expiresIn: '30m',
+        },
+      }),
     }),
     UserModule,
     RedisModule,
     EmailModule,
   ],
   // 声明服务提供者
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: LoginGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
+    },
+  ],
 })
 export class AppModule {}

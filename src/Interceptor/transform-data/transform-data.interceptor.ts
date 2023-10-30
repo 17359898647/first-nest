@@ -1,5 +1,6 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
 import { Observable, map } from 'rxjs'
+import { isUndefined } from 'lodash'
 
 @Injectable()
 export class TransformDataInterceptor implements NestInterceptor {
@@ -8,7 +9,11 @@ export class TransformDataInterceptor implements NestInterceptor {
     return next
       .handle()
       .pipe(map(data =>
-        ({ data, code, msg: '请求成功' })),
+        ({
+          data: isUndefined(data) ? null : data,
+          code,
+          msg: '请求成功',
+        })),
       )
   }
 }

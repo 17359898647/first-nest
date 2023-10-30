@@ -1,9 +1,9 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity({
-  name: 'permissions',
+  name: 'permission',
 })
-export class PermissionEntity {
+export class Permission {
   @PrimaryGeneratedColumn()
   id: number
 
@@ -11,7 +11,7 @@ export class PermissionEntity {
     length: 20,
     comment: '权限代码',
   })
-  code: string
+  code: 'aaa' | 'ccc' | 'ddd'
 
   @Column({
     length: 100,

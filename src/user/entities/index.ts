@@ -1,3 +1,3 @@
-export * from './role.entity'
+export * from './roles.entity'
 export * from './permission.entity'
-export * from './user.entity'
+export * from './users.entity'
