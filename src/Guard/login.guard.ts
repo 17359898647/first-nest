@@ -10,6 +10,7 @@ import { Observable } from 'rxjs'
 import { Reflector } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { Request } from 'express'
+import { split } from 'lodash'
 import { UserInfo } from '../user/vo/login-user.vo'
 
 interface JwtUserData extends Pick<UserInfo, 'username' | 'roles' | 'permissions' | 'userId'> {
@@ -38,7 +39,7 @@ export class LoginGuard implements CanActivate {
     ])
     if (!requireLogin)
       return true
-    const authorization = request.headers.authorization
+    const [_, authorization] = split(request.headers.authorization, ' ')
     if (!authorization)
       throw new UnauthorizedException('用户未登录')
     try {
