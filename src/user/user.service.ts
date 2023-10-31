@@ -56,6 +56,7 @@ export class UserService {
     newUser.password = md5(registerUser.password)
     newUser.email = registerUser.email
     newUser.nickName = registerUser.nickName
+    newUser.isAdmin = registerUser.isAdmin
     try {
       await this.userRepository.save(newUser)
       return '注册成功'

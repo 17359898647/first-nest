@@ -7,7 +7,7 @@ import { Response } from 'express'
 export class TransformDataInterceptor implements NestInterceptor {
   private logger = new Logger(TransformDataInterceptor.name)
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const response: Response = context.switchToHttp().getResponse()
+    const response = context.switchToHttp().getResponse<Response>()
     const url = context.switchToHttp().getRequest().url
     const code = response.statusCode.toString()
     if (startsWith(code, '2'))
@@ -18,7 +18,7 @@ export class TransformDataInterceptor implements NestInterceptor {
       .pipe(map((data) => {
         return {
           data: isUndefined(data) ? null : data,
-          code,
+          code: response.statusCode.toString(),
           msg: '请求成功',
         }
       }),

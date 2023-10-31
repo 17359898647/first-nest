@@ -10,7 +10,7 @@ export class RedisService {
 
   async get(key: string): Promise<string | null> {
     const keys = await this.redisClient.keys('*')
-    this.logger.log(keys)
+    this.logger.log(`redis所有键: ${keys}`)
     return await this.redisClient.get(key)
   }
 

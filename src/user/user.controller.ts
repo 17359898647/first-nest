@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Logger, Post, Query, UnauthorizedException } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Post,
+  Query,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { random } from 'lodash'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
@@ -10,7 +18,7 @@ import { LoginUserDto } from './dto/login-user.dto'
 
 @Controller('user')
 export class UserController {
-  private logger = new Logger()
+  private logger = new Logger(UserController.name)
   constructor(
     private readonly userService: UserService,
     private readonly redisService: RedisService,
@@ -27,7 +35,7 @@ export class UserController {
   @Get('register-captcha')
   async captcha(@Query('address') address: string) {
     const code = random(true).toString().slice(-6)
-    this.logger.log(`验证码：${code}`)
+    this.logger.debug(`验证码：${code}`)
     await this.redisService.set(`captcha_${address}`, code, 5 * 60)
     await this.emailService.sendMail(
       address,

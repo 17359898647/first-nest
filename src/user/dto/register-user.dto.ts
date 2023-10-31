@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator'
+import { IsBoolean, IsEmail, IsNotEmpty, MinLength } from 'class-validator'
 
 export class RegisterUserDto {
   @IsNotEmpty({
@@ -31,4 +31,9 @@ export class RegisterUserDto {
     message: 'captcha不能为空',
   })
   captcha: string
+
+  @IsBoolean({
+    message: 'isAdmin必须为布尔值',
+  })
+  isAdmin: boolean
 }
