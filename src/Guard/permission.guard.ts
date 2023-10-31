@@ -1,15 +1,23 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  SetMetadata,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { Observable } from 'rxjs'
 import { Reflector } from '@nestjs/core'
 import { Request } from 'express'
-import { find, forEach } from 'lodash'
+import { findIndex, forEach } from 'lodash'
+import { Permission } from '../user/entities'
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
+  private logger = new Logger(PermissionGuard.name)
   constructor(
-      @Inject(Reflector) private readonly reflector: Reflector,
-  ) {
-  }
+    private readonly reflector: Reflector,
+  ) {}
 
   canActivate(
     context: ExecutionContext,
@@ -18,18 +26,20 @@ export class PermissionGuard implements CanActivate {
     if (!request.user)
       return true
     const permissions = request.user.permissions
-    const requirePermissions = this.reflector.getAllAndOverride<string[]>('require-permissions', [
+    const requirePermissions = this.reflector.getAllAndOverride<Permission['code'][]>('require-permissions', [
       context.getHandler(),
       context.getClass(),
     ])
-    console.log('permissions', permissions, requirePermissions)
     if (!requirePermissions)
       return true
+    const errorRequirePermissions: Permission['code'][] = []
     forEach(requirePermissions, (permission) => {
-      const found = find(permissions, p => p.code === permission)
-      if (!found)
-        throw new UnauthorizedException(`权限不足，缺少${permission}权限`)
+      if (!findIndex(permissions, p => p.code === permission))
+        errorRequirePermissions.push(permission)
     })
+    if (errorRequirePermissions.length)
+      throw new UnauthorizedException(`用户没有权限: ${errorRequirePermissions.join(', ')}`)
     return true
   }
 }
+export const RequirePermissions = (...permissions: Permission['code'][]) => SetMetadata('require-permissions', permissions)

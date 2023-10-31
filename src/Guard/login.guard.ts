@@ -1,4 +1,11 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  SetMetadata,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { Observable } from 'rxjs'
 import { Reflector } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
@@ -14,9 +21,10 @@ declare module 'express'{
 }
 @Injectable()
 export class LoginGuard implements CanActivate {
+  private logger = new Logger(LoginGuard.name)
   constructor(
-    @Inject(Reflector) private readonly reflector: Reflector,
-    @Inject(JwtService) private readonly jwtService: JwtService,
+    private readonly reflector: Reflector,
+    private readonly jwtService: JwtService,
   ) {
   }
 
@@ -24,7 +32,7 @@ export class LoginGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request: Request = context.switchToHttp().getRequest()
-    const requireLogin = this.reflector.getAllAndOverride('require-login', [
+    const requireLogin = this.reflector.getAllAndOverride<boolean>('require-login', [
       context.getHandler(),
       context.getClass(),
     ])
@@ -38,7 +46,20 @@ export class LoginGuard implements CanActivate {
       return true
     }
     catch (e) {
-      throw new UnauthorizedException('用户未登录')
+      let message = ''
+      switch (e.name) {
+        case 'TokenExpiredError':
+          message = '登录已过期，请重新登录'
+          break
+        case 'JsonWebTokenError':
+          message = '登录凭证错误，请重新登录'
+          break
+        default:
+          message = `内部错误:${e.message}`
+      }
+      this.logger.error(message)
+      throw new UnauthorizedException(message)
     }
   }
 }
+export const RequireLogin = (require: boolean = true) => SetMetadata('require-login', require)

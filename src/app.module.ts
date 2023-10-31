@@ -52,7 +52,7 @@ import { PermissionGuard } from './Guard/permission.guard'
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('jwt_secret'),
         signOptions: {
-          expiresIn: '30m',
+          expiresIn: configService.get('jwt_access_token_expires_time') || '30m',
         },
       }),
     }),

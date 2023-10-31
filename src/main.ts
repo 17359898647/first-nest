@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe } from '@nestjs/common'
+import { Logger, ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { AppModule } from './app.module'
 import { LogTimesInterceptor } from './Interceptor/log-times/log-times.interceptor'
@@ -8,6 +8,7 @@ import { AllExceptionFilter } from './Filter/all-exception/all-exception.filter'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+  const logger = new Logger('端口')
   // 端口
   app.useGlobalPipes(new ValidationPipe())
 
@@ -16,6 +17,6 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LogTimesInterceptor(), new TransformDataInterceptor())
   app.useGlobalFilters(new AllExceptionFilter())
   await app.listen(port)
-  console.log(`http://localhost:${port}`)
+  logger.log(`http://localhost:${port}`)
 }
 bootstrap()

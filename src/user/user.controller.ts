@@ -46,14 +46,7 @@ export class UserController {
   @Post('login')
   async login(@Body() loginUser: LoginUserDto) {
     const loginResult = await this.userService.login(loginUser)
-    loginResult.accessToken = this.jwtService.sign({
-      userId: loginResult.userInfo.userId,
-      username: loginResult.userInfo.username,
-      roles: loginResult.userInfo.roles,
-      permissions: loginResult.userInfo.permissions,
-    }, {
-      expiresIn: this.configService.get('jwt_access_token_expires_time') || '30m',
-    })
+    loginResult.accessToken = this.userService.loginSign(loginResult)
     loginResult.refreshToken = this.jwtService.sign({
       userId: loginResult.userInfo.userId,
     }, {
@@ -65,14 +58,7 @@ export class UserController {
   @Post('admin-login')
   async adminLogin(@Body() loginUser: LoginUserDto) {
     const loginResult = await this.userService.login(loginUser, true)
-    loginResult.accessToken = this.jwtService.sign({
-      userId: loginResult.userInfo.userId,
-      username: loginResult.userInfo.username,
-      roles: loginResult.userInfo.roles,
-      permissions: loginResult.userInfo.permissions,
-    }, {
-      expiresIn: this.configService.get('jwt_access_token_expires_time') || '30m',
-    })
+    loginResult.accessToken = this.userService.loginSign(loginResult)
     loginResult.refreshToken = this.jwtService.sign({
       userId: loginResult.userInfo.userId,
     }, {
@@ -86,26 +72,11 @@ export class UserController {
     try {
       const data = this.jwtService.verify(token)
       const user = await this.userService.findUserById(data.userId)
-      const accessToken = this.jwtService.sign({
-        userId: user.id,
-        username: user.username,
-        roles: user.roles,
-        permissions: user.permissions,
-      }, {
-        expiresIn: this.configService.get('jwt_access_token_expires_time') || '30m',
-      })
-      const refreshToken = this.jwtService.sign({
-        userId: user.id,
-      }, {
-        expiresIn: this.configService.get('jwt_refresh_token_expires_time') || '7d',
-      })
-      return {
-        accessToken,
-        refreshToken,
-      }
+      return await this.userService.refreshToken(user)
     }
     catch (e) {
-      throw new UnauthorizedException('token过期 请重新登录')
+      this.logger.error(e.message)
+      throw new UnauthorizedException(e)
     }
   }
 
@@ -114,19 +85,7 @@ export class UserController {
     try {
       const data = this.jwtService.verify(token)
       const user = await this.userService.findUserById(data.userId, true)
-      const accessToken = this.jwtService.sign({
-        userId: user.id,
-        username: user.username,
-        roles: user.roles,
-        permissions: user.permissions,
-      }, {
-        expiresIn: this.configService.get('jwt_access_token_expires_time') || '30m',
-      })
-      const refreshToken = this.jwtService.sign({
-        userId: user.id,
-      }, {
-        expiresIn: this.configService.get('jwt_refresh_token_expires_time') || '7d',
-      })
+      const { refreshToken, accessToken } = await this.userService.refreshToken(user)
       return {
         accessToken,
         refreshToken,
