@@ -10,7 +10,9 @@ import { Permission, Roles, Users } from './entities'
 import { RegisterUserDto } from './dto/register-user.dto'
 import { LoginUserDto } from './dto/login-user.dto'
 import { LoginUserVo } from './vo/login-user.vo'
+import { RefreshTokenVo } from './vo/refresh-token.vo'
 
+type PromiseReturnType<T extends (...age: any) => any> = ReturnType<T> extends Promise<infer U> ? U : never
 @Injectable()
 export class UserService {
   private logger = new Logger()
@@ -125,16 +127,13 @@ export class UserService {
       roles: map(user.roles, role => role.name),
       permissions: this.createPermissions(user.roles),
     }
-    return userVo
-  }
-
-  loginSign({ userInfo }: LoginUserVo) {
-    return this.jwtService.sign({
-      userId: userInfo.userId,
-      username: userInfo.username,
-      roles: userInfo.roles,
-      permissions: userInfo.permissions,
+    const { accessToken, refreshToken } = await this.RefreshToken({
+      ...userVo.userInfo,
+      id: user.id,
     })
+    userVo.accessToken = accessToken
+    userVo.refreshToken = refreshToken
+    return userVo
   }
 
   async findUserById(userId: number, isAdmin: boolean = false) {
@@ -150,29 +149,42 @@ export class UserService {
 
     return {
       ...user,
+      userId: user.id,
       createTime: user.createTime.getTime(),
       roles: map(user.roles, role => role.name),
       permissions: this.createPermissions(user.roles),
     }
   }
 
-  async refreshToken(userInfo: ReturnType<typeof this.findUserById> extends Promise<infer U> ? U : never) {
-    const accessToken = this.jwtService.sign({
+  private getAccessToken(userInfo: {
+    id: number
+    username: string
+    roles: string[]
+    permissions: Permission[]
+  }) {
+    return this.jwtService.sign({
       userId: userInfo.id,
       username: userInfo.username,
       roles: userInfo.roles,
       permissions: userInfo.permissions,
-    }, {
-      expiresIn: this.configService.get('jwt_access_token_expires_time') || '30m',
     })
-    const refreshToken = this.jwtService.sign({
-      userId: userInfo.id,
-    }, {
-      expiresIn: this.configService.get('jwt_refresh_token_expires_time') || '7d',
+  }
+
+  private getRefreshToken(userId: number | string) {
+    return this.jwtService.sign({
+      userId,
     })
-    return {
-      accessToken,
-      refreshToken,
-    }
+  }
+
+  async RefreshToken(userInfo: {
+    id: number
+    username: string
+    roles: string[]
+    permissions: Permission[]
+  }) {
+    const vo = new RefreshTokenVo()
+    vo.accessToken = this.getAccessToken(userInfo)
+    vo.refreshToken = this.getRefreshToken(userInfo.id)
+    return vo
   }
 }

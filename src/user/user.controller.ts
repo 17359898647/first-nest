@@ -10,12 +10,14 @@ import {
 import { random } from 'lodash'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { RedisService } from '../redis/redis.service'
 import { EmailService } from '../email/email.service'
 import { UserService } from './user.service'
 import { RegisterUserDto } from './dto/register-user.dto'
 import { LoginUserDto } from './dto/login-user.dto'
+import { LoginUserVo } from './vo/login-user.vo'
+import { RefreshTokenVo } from './vo/refresh-token.vo'
 
 @Controller('user')
 @ApiTags('用户')
@@ -58,38 +60,30 @@ export class UserController {
 
   @Post('login')
   @ApiOperation({ summary: '登录' })
+  @ApiBody({
+    type: LoginUserVo,
+  })
   async login(@Body() loginUser: LoginUserDto) {
-    const loginResult = await this.userService.login(loginUser)
-    loginResult.accessToken = this.userService.loginSign(loginResult)
-    loginResult.refreshToken = this.jwtService.sign({
-      userId: loginResult.userInfo.userId,
-    }, {
-      expiresIn: this.configService.get('jwt_refresh_token_expires_time') || '7d',
-    })
-    return loginResult
+    return await this.userService.login(loginUser)
   }
 
   @Post('/admin/login')
   @ApiOperation({ summary: '管理员登录' })
   async adminLogin(@Body() loginUser: LoginUserDto) {
-    const loginResult = await this.userService.login(loginUser, true)
-    loginResult.accessToken = this.userService.loginSign(loginResult)
-    loginResult.refreshToken = this.jwtService.sign({
-      userId: loginResult.userInfo.userId,
-    }, {
-      expiresIn: this.configService.get('jwt_refresh_token_expires_time') || '7d',
-    })
-    return loginResult
+    return await this.userService.login(loginUser, true)
   }
 
   @Get('refresh')
   @ApiOperation({ summary: '刷新token' })
   @ApiQuery({ name: 'token', description: 'token' })
+  @ApiBody({
+    type: RefreshTokenVo,
+  })
   async refresh(@Query('token') token: string) {
     try {
       const data = this.jwtService.verify(token)
       const user = await this.userService.findUserById(data.userId)
-      return await this.userService.refreshToken(user)
+      return await this.userService.RefreshToken(user)
     }
     catch (e) {
       this.logger.error(e.message)
@@ -104,7 +98,7 @@ export class UserController {
     try {
       const data = this.jwtService.verify(token)
       const user = await this.userService.findUserById(data.userId, true)
-      const { refreshToken, accessToken } = await this.userService.refreshToken(user)
+      const { refreshToken, accessToken } = await this.userService.RefreshToken(user)
       return {
         accessToken,
         refreshToken,

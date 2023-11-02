@@ -1,31 +1,45 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Permission, Roles } from '../entities'
 
-export interface UserInfo {
-  userId: number
+export class UserInfo {
+  @ApiProperty({ description: '用户id' })
+    userId: number
 
-  username: string
+  @ApiProperty({ description: '用户名' })
+    username: string
 
-  nickName: string
+  @ApiProperty({ description: '昵称' })
+    nickName: string
 
-  email: string
+  @ApiProperty({ description: '邮箱' })
+    email: string
 
-  headPic: string
+  @ApiProperty({ description: '头像' })
+    headPic: string
 
-  phoneNumber: string
+  @ApiProperty({ description: '手机号' })
+    phoneNumber: string
 
-  isFrozen: boolean
+  @ApiProperty({ description: '是否冻结' })
+    isFrozen: boolean
 
-  isAdmin: boolean
+  @ApiProperty({ description: '是否管理员' })
+    isAdmin: boolean
 
-  createTime: number
+  @ApiProperty({ description: '创建时间' })
+    createTime: number
 
-  roles: Roles['name'][]
+  @ApiProperty({ description: '角色' })
+    roles: Roles['name'][]
 
-  permissions: Permission[]
+  @ApiProperty({ description: '权限' })
+    permissions: Permission[]
 }
 export class LoginUserVo {
-  @ApiProperty({ description: '用户信息' })
+  @ApiProperty({
+    description: '用户信息',
+    type: UserInfo,
+  })
   userInfo: UserInfo
 
   @ApiProperty({ description: '访问令牌' })
