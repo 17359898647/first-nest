@@ -13,11 +13,14 @@ import { ConfigService } from '@nestjs/config'
 import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { RedisService } from '../redis/redis.service'
 import { EmailService } from '../email/email.service'
+import { RequireLogin } from '../Guard/login.guard'
+import { GetUserInfo } from '../Guard/GetUserInfo'
 import { UserService } from './user.service'
 import { RegisterUserDto } from './dto/register-user.dto'
 import { LoginUserDto } from './dto/login-user.dto'
 import { LoginUserVo } from './vo/login-user.vo'
 import { RefreshTokenVo } from './vo/refresh-token.vo'
+import { UserDetailVo } from './vo/user-detail.vo'
 
 @Controller('user')
 @ApiTags('用户')
@@ -67,7 +70,7 @@ export class UserController {
     return await this.userService.login(loginUser)
   }
 
-  @Post('/admin/login')
+  @Post('admin/login')
   @ApiOperation({ summary: '管理员登录' })
   async adminLogin(@Body() loginUser: LoginUserDto) {
     return await this.userService.login(loginUser, true)
@@ -91,7 +94,17 @@ export class UserController {
     }
   }
 
-  @Get('/admin/refresh')
+  @Get('detail')
+  @RequireLogin()
+  @ApiOperation({ summary: '获取用户信息' })
+  @ApiBody({
+    type: UserDetailVo,
+  })
+  async info(@GetUserInfo('userId') userId: number) {
+    return await this.userService.findUserDetailById(userId)
+  }
+
+  @Get('admin/refresh')
   @ApiOperation({ summary: '刷新管理员token' })
   @ApiQuery({ name: 'token', description: 'token' })
   async adminRefresh(@Query('token') token: string) {
@@ -121,13 +134,13 @@ export class UserController {
     return '更新成功'
   }
 
-  @Post('/admin/update')
+  @Post('admin/update')
   @ApiOperation({ summary: '更新管理员信息' })
   async adminUpdate(@Body() registerUser: RegisterUserDto) {
     return '更新成功'
   }
 
-  @Post('/admin/update-password')
+  @Post('admin/update-password')
   @ApiOperation({ summary: '更新管理员密码' })
   async adminUpdatePassword(@Body() registerUser: RegisterUserDto) {
     return '更新成功'

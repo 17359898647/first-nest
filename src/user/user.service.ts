@@ -4,6 +4,7 @@ import { Repository } from 'typeorm'
 import { forEach, indexOf, map, reduce } from 'lodash'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
+import dayjs from 'dayjs'
 import { RedisService } from '../redis/redis.service'
 import { md5 } from '../utils/md5'
 import { Permission, Roles, Users } from './entities'
@@ -11,6 +12,7 @@ import { RegisterUserDto } from './dto/register-user.dto'
 import { LoginUserDto } from './dto/login-user.dto'
 import { LoginUserVo } from './vo/login-user.vo'
 import { RefreshTokenVo } from './vo/refresh-token.vo'
+import { UserDetailVo } from './vo/user-detail.vo'
 
 type PromiseReturnType<T extends (...age: any) => any> = ReturnType<T> extends Promise<infer U> ? U : never
 @Injectable()
@@ -175,6 +177,24 @@ export class UserService {
     vo.accessToken = this.getAccessToken(userInfo)
     vo.refreshToken = this.getRefreshToken(userInfo.userId)
     return vo
+  }
+
+  async findUserDetailById(userId: number) {
+    const detail = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    })
+    const user = new UserDetailVo()
+    user.id = detail.id
+    user.username = detail.username
+    user.nickName = detail.nickName
+    user.email = detail.email
+    user.headPic = detail.headPic
+    user.phoneNumber = detail.phoneNumber
+    user.isFrozen = detail.isFrozen
+    user.createTime = dayjs(detail.createTime).format('YYYY-MM-DD HH:mm:ss')
+    return user
   }
 }
 interface IUserInfo {

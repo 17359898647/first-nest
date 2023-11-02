@@ -1,6 +1,7 @@
 import { Controller, Get, SetMetadata } from '@nestjs/common'
 import { AppService } from './app.service'
-import { RequireLogin } from './Guard/login.guard'
+import { JwtUserData, RequireLogin } from './Guard/login.guard'
+import { GetUserInfo } from './Guard/GetUserInfo'
 
 @Controller()
 @SetMetadata('require-login', false)
@@ -16,8 +17,8 @@ export class AppController {
 
   @Get('test')
   @RequireLogin()
-  // @RequirePermissions('ccc', 'ddd', 'aaa')
-  test(): string {
+  test(@GetUserInfo() userInfo: JwtUserData): string {
+    console.log(userInfo)
     return 'test'
   }
 }

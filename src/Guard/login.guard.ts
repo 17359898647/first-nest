@@ -13,7 +13,7 @@ import { Request } from 'express'
 import { split } from 'lodash'
 import { UserInfo } from '../user/vo/login-user.vo'
 
-interface JwtUserData extends Pick<UserInfo, 'username' | 'roles' | 'permissions' | 'userId'> {
+export interface JwtUserData extends Pick<UserInfo, 'username' | 'roles' | 'permissions' | 'userId'> {
 }
 declare module 'express'{
   interface Request {
@@ -39,6 +39,7 @@ export class LoginGuard implements CanActivate {
     ])
     if (!requireLogin)
       return true
+    /* Bearer *** */
     const [, authorization] = split(request.headers.authorization, ' ')
     if (!authorization)
       throw new UnauthorizedException('用户未登录')
