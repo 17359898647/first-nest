@@ -1,0 +1,25 @@
+import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from '@nestjs/common'
+import { Observable, map } from 'rxjs'
+import { isUndefined, startsWith } from 'lodash'
+import { Response } from 'express'
+
+@Injectable()
+export class TransformDataInterceptor implements NestInterceptor {
+  private logger = new Logger(TransformDataInterceptor.name)
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const response = context.switchToHttp().getResponse<Response>()
+    const code = response.statusCode.toString()
+    if (startsWith(code, '2'))
+      response.status(200)
+    return next
+      .handle()
+      .pipe(map((data) => {
+        return {
+          data: isUndefined(data) ? null : data,
+          code: response.statusCode.toString(),
+          msg: '请求成功',
+        }
+      }),
+      )
+  }
+}

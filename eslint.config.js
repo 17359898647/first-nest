@@ -4,7 +4,7 @@ module.exports = eslint({
   rules: {
     'ts/consistent-type-imports': 0,
   },
-  sortKeysOptions: true,
+  sortKeysOptions: false,
   typescript: true,
   vue: false,
 })
