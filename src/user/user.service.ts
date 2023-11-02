@@ -129,7 +129,6 @@ export class UserService {
     }
     const { accessToken, refreshToken } = await this.RefreshToken({
       ...userVo.userInfo,
-      id: user.id,
     })
     userVo.accessToken = accessToken
     userVo.refreshToken = refreshToken
@@ -156,14 +155,9 @@ export class UserService {
     }
   }
 
-  private getAccessToken(userInfo: {
-    id: number
-    username: string
-    roles: string[]
-    permissions: Permission[]
-  }) {
+  private getAccessToken(userInfo: IUserInfo) {
     return this.jwtService.sign({
-      userId: userInfo.id,
+      userId: userInfo.userId,
       username: userInfo.username,
       roles: userInfo.roles,
       permissions: userInfo.permissions,
@@ -176,15 +170,16 @@ export class UserService {
     })
   }
 
-  async RefreshToken(userInfo: {
-    id: number
-    username: string
-    roles: string[]
-    permissions: Permission[]
-  }) {
+  async RefreshToken(userInfo: IUserInfo) {
     const vo = new RefreshTokenVo()
     vo.accessToken = this.getAccessToken(userInfo)
-    vo.refreshToken = this.getRefreshToken(userInfo.id)
+    vo.refreshToken = this.getRefreshToken(userInfo.userId)
     return vo
   }
+}
+interface IUserInfo {
+  userId: number
+  username: string
+  roles: string[]
+  permissions: Permission[]
 }
