@@ -4,19 +4,18 @@ import { Request } from 'express'
 
 @Injectable()
 export class LogTimesInterceptor implements NestInterceptor {
-  private logger = new Logger()
+  private logger = new Logger(LogTimesInterceptor.name)
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const now = Date.now()
     const className = context.getClass().name
     const handlerName = context.getHandler().name
-    const request = context.switchToHttp().getRequest<Request>()
-    const { method, path } = request
+    const { user, method, path } = context.switchToHttp().getRequest<Request>()
     return next
       .handle()
       .pipe(
         tap((data) => {
           this.logger.debug(
-              `${method} ${path}  ${className} ${handlerName} ${Date.now() - now}ms`,
+              `userId: ${user.userId} userName: ${user.username} ${method} ${path}  ${className} ${handlerName} ${Date.now() - now}ms`,
           )
           this.logger.debug(
                 `request body: ${JSON.stringify(data)}`,

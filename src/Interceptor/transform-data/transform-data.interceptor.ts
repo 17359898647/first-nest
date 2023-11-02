@@ -8,11 +8,9 @@ export class TransformDataInterceptor implements NestInterceptor {
   private logger = new Logger(TransformDataInterceptor.name)
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const response = context.switchToHttp().getResponse<Response>()
-    const url = context.switchToHttp().getRequest().url
     const code = response.statusCode.toString()
     if (startsWith(code, '2'))
       response.status(200)
-    this.logger.log(`请求地址：${url}`)
     return next
       .handle()
       .pipe(map((data) => {

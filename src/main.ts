@@ -16,6 +16,7 @@ async function bootstrap() {
   const port = configService.get('nest_server_port')
   app.useGlobalInterceptors(new LogTimesInterceptor(), new TransformDataInterceptor())
   app.useGlobalFilters(new AllExceptionFilter())
+  app.enableCors()
   await app.listen(port)
   logger.log(`http://localhost:${port}`)
 }

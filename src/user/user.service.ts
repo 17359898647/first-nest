@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { forEach, indexOf, map, reduce } from 'lodash'
@@ -14,17 +14,6 @@ import { LoginUserVo } from './vo/login-user.vo'
 @Injectable()
 export class UserService {
   private logger = new Logger()
-  // @InjectRepository(Users)
-  // private userRepository: Repository<Users>
-  //
-  // @InjectRepository(Roles)
-  // private roleRepository: Repository<Roles>
-  //
-  // @InjectRepository(Permission)
-  // private permissionRepository: Repository<Permission>
-  //
-  // @Inject(RedisService)
-  // private redisService: RedisService
   constructor(
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
@@ -32,7 +21,6 @@ export class UserService {
     private roleRepository: Repository<Roles>,
     @InjectRepository(Permission)
     private permissionRepository: Repository<Permission>,
-    @Inject(RedisService)
     private redisService: RedisService,
     private jwtService: JwtService,
     private configService: ConfigService,
