@@ -5,6 +5,7 @@ import { Request } from 'express'
 @Injectable()
 export class LogTimesInterceptor implements NestInterceptor {
   private logger = new Logger(LogTimesInterceptor.name)
+
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const now = Date.now()
     const className = context.getClass().name
@@ -15,7 +16,7 @@ export class LogTimesInterceptor implements NestInterceptor {
       .pipe(
         tap((data) => {
           this.logger.debug(
-              `userId: ${user.userId} userName: ${user.username} ${method} ${path}  ${className} ${handlerName} ${Date.now() - now}ms`,
+              `userId: ${user?.userId} userName: ${user?.username} Method:${method} Path:${path}  ClassName:${className} Function:${handlerName} ${Date.now() - now}ms`,
           )
           this.logger.debug(
                 `request body: ${JSON.stringify(data)}`,
